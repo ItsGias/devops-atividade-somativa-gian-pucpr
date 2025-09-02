@@ -1,0 +1,30 @@
+name: CD - Preview (artefato na PR)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [ main ]
+
+jobs:
+  package-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepara pasta de build (copia index.html)
+        run: |
+          mkdir -p dist
+          if [ -f "index.html" ]; then
+            cp -f index.html dist/
+          else
+            echo "index.html não encontrado; criando placeholder"
+            echo "<html><body><h1>Preview</h1></body></html>" > dist/index.html
+          fi
+
+      - name: Anexa artefato da build
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-preview
+          path: dist
+          if-no-files-found: 'warn'
