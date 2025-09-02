@@ -1,9 +1,17 @@
-# Projeto CI/CD DevOps PUCPR
+# Projeto DevOps – College Football SEC
 
-Repositório da Atividade 1.
+Este repositório contém um projeto simples para acompanhar o fluxo de trabalho com Git, GitHub e GitHub Actions.  
+O tema escolhido é o College Football, com foco na Southeastern Conference (SEC).
 
-## Estrutura do projeto
-- index.html: página estática
-- hello.py: script de saudação
-- README.md: descrição do repositório
-- Linha de teste para PR
+## Conteúdo
+- `index.html` – página inicial com informações sobre alguns times da SEC.
+- `README.md` – descrição do projeto.
+
+## SEC (Southeastern Conference)
+Alguns times que fazem parte da SEC:
+- Alabama Crimson Tide
+- Georgia Bulldogs
+- LSU Tigers
+- Florida Gators
+- Tennessee Volunteers
+- Auburn Tigers
