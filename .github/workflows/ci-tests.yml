@@ -24,7 +24,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest
 
+      - name: Sanity check
+        run: |
+          ls -la
+          python - <<'PY'
+          import os, importlib
+          print("CWD:", os.getcwd())
+          print("files:", sorted(os.listdir("."))[:50])
+          m = importlib.import_module("hello")
+          print("imported hello OK; has team_slug?", hasattr(m, "team_slug"))
+          PY
+
       - name: Run pytest
         env:
           PYTHONPATH: .
-        run: pytest -q
+        run: pytest -q --maxfail=1 -ra
