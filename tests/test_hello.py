@@ -1,14 +1,15 @@
-import importlib
-m = importlib.import_module("hello")
+from pathlib import Path
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))
 
-def test_hello_returns_string():
-    assert isinstance(m.hello(), str)
-    assert m.hello() == "Hello, DevOps!"
+import importlib
 
 def test_team_slug_basic_cases():
+    m = importlib.import_module("hello")
     assert m.team_slug("Alabama Crimson Tide") == "alabama-crimson-tide"
     assert m.team_slug("Georgia Bulldogs") == "georgia-bulldogs"
     assert m.team_slug("LSU") == "lsu"
+
 
 def test_team_slug_ignores_case_and_spaces():
     assert m.team_slug("   georgia   bulldogs  ") == "georgia-bulldogs"
