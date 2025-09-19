@@ -1,11 +1,8 @@
 name: Alerts to Discord
 
 on:
-  # Alerta quando houver push no main (ex.: após merge da PR)
   push:
     branches: [ main ]
-
-  # Alertas em eventos de Pull Request que têm base 'main'
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches: [ main ]
@@ -13,73 +10,29 @@ on:
 jobs:
   notify:
     runs-on: ubuntu-latest
-
-    # Construir payload para PRs (aberta/atualizada/fechada/merge)
     steps:
       - name: Build payload for PR events
         if: ${{ github.event_name == 'pull_request' }}
-        env:
-          PR_TITLE: ${{ github.event.pull_request.title }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          PR_STATE: ${{ github.event.action }}                # opened/synchronize/reopened/closed
-          PR_MERGED: ${{ github.event.pull_request.merged }}  # true/false (só presente em 'closed')
-          REPO: ${{ github.repository }}
-          ACTOR: ${{ github.actor }}
-          BASE: ${{ github.base_ref }}
-          HEAD: ${{ github.head_ref }}
         run: |
-          python - <<'PY'
-          import json, os
-          state = os.environ.get("PR_STATE","").lower()
-          merged = os.environ.get("PR_MERGED","false").lower() == "true"
-          if merged and state == "closed":
-              status = "**MERGED** ✅"
-          elif state == "closed":
-              status = "**CLOSED** ❌"
-          else:
-              status = f"**{state.upper()}**"
+          cat > payload.json <<'JSON'
+          {
+            "username": "CI/CD Bot",
+            "content": "**${{ github.repository }}**\nPR #${{ github.event.pull_request.number }} (${{ github.event.pull_request.title }})\nAction: *${{ github.event.action }}*\nBy: **${{ github.actor }}**\nURL: ${{ github.event.pull_request.html_url }}"
+          }
+          JSON
 
-          content = (
-              f"🔔 **PR Alert** | {os.environ['REPO']}\n"
-              f"{status}\n"
-              f"• Título: {os.environ['PR_TITLE']}\n"
-              f"• Autor: {os.environ['ACTOR']}\n"
-              f"• Branch: {os.environ['HEAD']} → {os.environ['BASE']}\n"
-              f"• Link: {os.environ['PR_URL']}"
-          )
-          with open("payload.json","w", encoding="utf-8") as f:
-              json.dump({"content": content}, f, ensure_ascii=False)
-          PY
-
-      # Construir payload para push no main (merge concluído, por ex.)
-      - name: Build payload for push to main
+      - name: Build payload for push events
         if: ${{ github.event_name == 'push' }}
-        env:
-          REPO: ${{ github.repository }}
-          ACTOR: ${{ github.actor }}
-          REF: ${{ github.ref_name }}
-          SHA: ${{ github.sha }}
-          MSG: ${{ github.event.head_commit.message }}
         run: |
-          python - <<'PY'
-          import json, os
-          sha_short = os.environ["SHA"][:7]
-          msg = os.environ.get("MSG","").strip()
-          content = (
-              f"🚀 **Deploy Alert** | {os.environ['REPO']}\n"
-              f"**PUSH** para `{os.environ['REF']}` por {os.environ['ACTOR']}\n"
-              f"• Commit: `{sha_short}`\n"
-              f"• Mensagem: {msg}"
-          )
-          with open("payload.json","w", encoding="utf-8") as f:
-              json.dump({"content": content}, f, ensure_ascii=False)
-          PY
+          cat > payload.json <<'JSON'
+          {
+            "username": "CI/CD Bot",
+            "content": "**${{ github.repository }}**\nPush to **${{ github.ref_name }}** by **${{ github.actor }}**\nCommit: ${{ github.sha }}\nhttps://github.com/${{ github.repository }}/commit/${{ github.sha }}"
+          }
+          JSON
 
-      # Enviar o payload ao Discord com o secret
       - name: Send to Discord
         env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: |
-          curl -sS -H "Content-Type: application/json" \
-               -d @payload.json \
-               "$DISCORD_WEBHOOK"
+          curl -sS -H "Content-Type: application/json" -X POST -d @payload.json "$WEBHOOK"
